@@ -4,7 +4,7 @@ const {persons, createOrUpdatePerson} = require('../data/data_cs/persons')
 const {findPerson, findPersonById} = require('../data/data_bl/data_bl')
 console.log(findPerson);
 
-const personsArray = persons.persons;
+let personsArray = persons.persons;
 
 router.get('/', (req, res) => {
     res.send("this is the main route");
@@ -61,9 +61,11 @@ router.delete('/persons/:id', (req, res) => {
         return;
     }
     console.log("persons: ", persons);
+    console.log("index to delete: ", idToDelete.foundIndex);
     const idOut = personsArray[idToDelete.foundIndex].id;
-    personsArray.splice(idToDelete.foundIndex, 1);
-    console.log("Persons after delete", persons);
+    const filteredArray = personsArray.filter((person) => person.id !== idOut);
+    persons.persons = filteredArray;
+    console.log("Persons after delete", persons.persons);
     res.status(200).send(idOut.toString());
 })
     
