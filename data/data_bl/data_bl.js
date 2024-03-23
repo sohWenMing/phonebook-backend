@@ -21,8 +21,15 @@ function findPerson(name) {
 }
 
 function findPersonById(id) {
+    console.log("Id passed in: ", id);
+
+    console.log("Person Array: ", personArray);
+
+    const foundPerson = personArray.find((person) => person.id === id);
+    console.log("foundPerson", foundPerson);
     
     const foundIndex = personArray.findIndex((person) => person.id === id)
+    
     console.log("foundIndex: ", foundIndex)
     return {
         foundIndex: foundIndex, 

@@ -30,6 +30,7 @@ router.post('/persons', (req, res) => {
     }
     
     const newPerson = createOrUpdatePerson(payload);
+    personsArray.push(newPerson);
     console.log("new person created:", newPerson)
     res.status(200).send(JSON.stringify(newPerson));
 })
@@ -49,7 +50,10 @@ router.put('/persons/:id', (req, res) => {
 })
 
 router.delete('/persons/:id', (req, res) => {
+
+
     console.log("delete ran")
+    console.log("param: ", req.params.id);
     console.log("inputparam type", typeof(req.params.id))
     const idToDelete = findPersonById(Number(req.params.id));
     if(!idToDelete.isFound) {
