@@ -26,13 +26,14 @@ async function findExistingPerson(Person, body) {
 }
 
 // let personsArray = persons.persons;
-let Person;
+let Connection;
 
 router.use('*', async(req, res, next) => {
     try {
-        if(!Person) {
-            Person = await connectToDatabase();
+        if(!Connection) {
+            Connection = await connectToDatabase();
             console.log("base route ran")
+            console.log("Connection: ", Connection)
         }
         next()
     }
@@ -49,7 +50,7 @@ router.get('/', (req, res) => {
 
 router.get('/persons', async(req, res) => {
     try {
-        Person.getAllPersons()
+        Connection.getAllPersons()
             .then((response) => res.json(response))
     }
     catch(error) {
@@ -60,15 +61,15 @@ router.get('/persons', async(req, res) => {
 router.post('/persons', async(req, res) => {
     validateBody(req, res);
     try {
-        const existingPerson = await findExistingPerson(Person, req.body);
+        const existingPerson = await findExistingPerson(Connection, req.body);
         console.log("Is found value: ", existingPerson.isFound);
         if(existingPerson.isFound) {
             res.status(409).send("person already exists in the database")
         return
         }
         else{
-            const savedPerson = await Person.savePerson(req.body);
-            const allPersons = await Person.getAllPersons();
+            const savedPerson = await Connection.savePerson(req.body);
+            const allPersons = await Connection.getAllPersons();
             res.status(200).json({
                 savedPerson, allPersons
             })
@@ -81,8 +82,8 @@ router.post('/persons', async(req, res) => {
 
 router.put('/persons/:id', async(req, res) => {
    try {
-    const updatedPerson = await Person.updatePerson(req.body);
-    const allPersons = await Person.getAllPersons();
+    const updatedPerson = await Connection.updatePerson(req.body);
+    const allPersons = await Connection.getAllPersons();
     res.status(200).json({
         updatedPerson, allPersons
     })
@@ -96,7 +97,7 @@ router.put('/persons/:id', async(req, res) => {
 
 router.post('/test', async(req, res) => {
     try {
-        const foundPerson = await Person.find({"name": req.body.name})
+        const foundPerson = await Connection.find({"name": req.body.name})
         if(foundPerson.length != 0) {
             res.status(409).send("This person's name already exists in the database")
             return
@@ -122,8 +123,8 @@ router.post('/test', async(req, res) => {
 router.delete('/persons/:id', async(req, res) => {
     console.log("id passed in: ", req.params.id);
     try {
-        const deletedPerson = await Person.deletePersonById(req.params.id);
-        const allPersons = await Person.getAllPersons();
+        const deletedPerson = await Connection.deletePersonById(req.params.id);
+        const allPersons = await Connection.getAllPersons();
         res.status(200).json({
             deletedPerson, allPersons 
         })
