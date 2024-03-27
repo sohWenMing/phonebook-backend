@@ -2,6 +2,7 @@ const path = require('path')
 require("dotenv").config({
     path: path.resolve(__dirname, '../.env')
 })
+console.log("env password: ", process.env.PASSWORD);
 const mongoose = require('mongoose');
 
 const url = `mongodb+srv://nindgabeet:${process.env.PASSWORD}@cluster0.hb7m3ac.mongodb.net/phonebook?retryWrites=true&w=majority&appName=Cluster0`
