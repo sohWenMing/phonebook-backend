@@ -10,7 +10,6 @@ async function connectToDatabase() {
     try {
         await mongoose.connect(url)
         mongoose.set('strictQuery', false);
-        console.log("Connected to MongoDB")
 
         const personSchema = new mongoose.Schema({
             name: String,
@@ -27,8 +26,89 @@ async function connectToDatabase() {
         })
         
         const Person = mongoose.model('Person', personSchema);
-        return Person
+
+        async function getAllPersons() {
+            try {
+                const allPersons = await Person.find({})
+                return allPersons
+            }
+            catch(error) {
+                throw error
+            }
         }
+
+        async function findPersonByName(reqBody) {
+            try {
+                console.log("findPersonByName ran");
+                
+                const foundPerson = await Person.find({"name": reqBody.name})
+                console.log(foundPerson);
+                return({
+                    "foundPerson": foundPerson, 
+                    "isFound": foundPerson.length > 0
+                })
+            }catch(error) {
+                throw error
+            }
+        }
+
+       
+        async function savePerson(reqBody) {
+            try {
+                const personToSave = new Person({
+                    "name": reqBody.name, 
+                    "number": reqBody.number
+                })
+                const savedPerson = await personToSave.save();
+                return savedPerson;
+            }catch(error) {
+                throw error
+            }
+        }
+
+        async function updatePerson(personObject) {
+            try {
+                
+                const foundAndUpdatedPerson = await Person.findByIdAndUpdate(
+                    personObject.id,
+                    {$set: 
+                        {
+                            name: personObject.name,
+                            number: personObject.number
+                        }
+                    }
+                )
+                if(!foundAndUpdatedPerson) {
+                    throw error;
+                    return
+                }
+                const updatedPerson = await Person.findById(personObject.id);
+                console.log("found person: ", foundAndUpdatedPerson);
+                console.log("updated person: ", updatedPerson);
+                return(updatedPerson);
+                
+
+               
+            }
+            catch(error) {
+                throw error
+            }
+        }
+
+        async function deletePersonById(id) {
+            console.log("id passed into deletePersonById: ", id);
+            try {
+                const deletedResponse = await Person.findByIdAndDelete(id);
+                return deletedResponse
+            }
+            catch(error) {
+                throw error
+            }
+        }
+        console.log("Connected to MongoDB")
+        return {Person, getAllPersons, findPersonByName, savePerson, updatePerson, deletePersonById}
+        }
+
     
     catch(error) {
         console.error(error.message);

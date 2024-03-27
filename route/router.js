@@ -7,19 +7,49 @@ const connectToDatabase = require('../models/persons.js')
 
 console.log("connect to database", connectToDatabase);
 
+function validateBody(req, res) {
+    if(!req.body.name || !req.body.number || req.body.name === "" || req.body.number === "") {
+        res.status(409).send("mandatory information was not filled")
+        return
+    }
+}
+
+async function findExistingPerson(Person, body) {
+    try {
+        const existingPerson = await Person.findPersonByName(body);
+        console.log("Existing person in findExistingPerson: ", existingPerson);
+        return existingPerson;
+    }
+    catch(error) {
+        throw error
+    }
+}
+
 // let personsArray = persons.persons;
+let Person;
+
+router.use('*', async(req, res, next) => {
+    try {
+        if(!Person) {
+            Person = await connectToDatabase();
+            console.log("base route ran")
+        }
+        next()
+    }
+    catch(error) {
+        throw error
+    }
+
+})
 
 router.get('/', (req, res) => {
     res.send("this is the main route");
 })
 
-let Person;
+
 router.get('/persons', async(req, res) => {
     try {
-        if(!Person) {
-            Person = await connectToDatabase();
-        }
-        Person.find({})
+        Person.getAllPersons()
             .then((response) => res.json(response))
     }
     catch(error) {
@@ -27,61 +57,83 @@ router.get('/persons', async(req, res) => {
     } 
 })
 
-// router.post('/persons', (req, res) => {
-//     console.log(req.body)
-//     const payload = req.body;
+router.post('/persons', async(req, res) => {
+    validateBody(req, res);
+    try {
+        const existingPerson = await findExistingPerson(Person, req.body);
+        console.log("Is found value: ", existingPerson.isFound);
+        if(existingPerson.isFound) {
+            res.status(409).send("person already exists in the database")
+        return
+        }
+        else{
+            const savedPerson = await Person.savePerson(req.body);
+            const allPersons = await Person.getAllPersons();
+            res.status(200).json({
+                savedPerson, allPersons
+            })
+        }
+    }
+    catch(error) {
+        res.status(400).send(error.message);
+    } 
+})
+
+router.put('/persons/:id', async(req, res) => {
+   try {
+    const updatedPerson = await Person.updatePerson(req.body);
+    const allPersons = await Person.getAllPersons();
+    res.status(200).json({
+        updatedPerson, allPersons
+    })
+   }
+   catch(error) {
+    res.status(400).send(error.message)
+    
+   }
+   
+})
+
+router.post('/test', async(req, res) => {
+    try {
+        const foundPerson = await Person.find({"name": req.body.name})
+        if(foundPerson.length != 0) {
+            res.status(409).send("This person's name already exists in the database")
+            return
+        }
+        else {
+            const personToAdd = new Person({
+                "name": req.body.name, 
+                "number": req.body.number
+            })
+            const addedPerson = await personToAdd.save();
+            console.log(addedPerson);
+            
+            
+        }
+    }
+    catch(error) {
+        res.send(error);
+    }
     
 
-//     if(!payload.name || !payload.number || payload.name.trim() === "" || payload.number.trim() === "" ) {
-//         res.status(400).end("Bad Request")
-//         console.log("Error in payload");
-//         return;
-//     }
-//     const duplicateCheck = findPerson(payload.name) 
-//     if(duplicateCheck.IsFound) {
-//         res.status(400).send("Duplicate data was found.")
-//         return
-//     }
+})
+
+router.delete('/persons/:id', async(req, res) => {
+    console.log("id passed in: ", req.params.id);
+    try {
+        const deletedPerson = await Person.deletePersonById(req.params.id);
+        const allPersons = await Person.getAllPersons();
+        res.status(200).json({
+            deletedPerson, allPersons 
+        })
+    }
+    catch(error) {
+        res.status(400).send(error.message);
+    }
+})
     
-//     const newPerson = createOrUpdatePerson(payload);
-//     personsArray.push(newPerson);
-//     console.log("new person created:", newPerson)
-//     res.status(200).send(JSON.stringify(newPerson));
-// })
 
-// router.put('/persons/:id', (req, res) => {
-//     console.log("Id passed in: ", req.params.id);
-//     console.log("request body: ", req.body);
-//     const indexToUpdate = personsArray.findIndex(person => person.id === req.body.id)
-//     if (indexToUpdate === -1) {
-//         res.status(404).send("This user doesn't currently exist in the database")
-//         return
-//     }
-//     personsArray[indexToUpdate] = req.body;
-//     res.status(200).json(req.body);
-
-
-// })
-
-// router.delete('/persons/:id', (req, res) => {
-
-
-//     console.log("delete ran")
-//     console.log("param: ", req.params.id);
-//     console.log("inputparam type", typeof(req.params.id))
-//     const idToDelete = findPersonById(Number(req.params.id));
-//     if(!idToDelete.isFound) {
-//         res.status(400).send("User was previously deleted");
-//         return;
-//     }
-//     console.log("persons: ", persons);
-//     console.log("index to delete: ", idToDelete.foundIndex);
-//     const idOut = personsArray[idToDelete.foundIndex].id;
-//     const filteredArray = personsArray.filter((person) => person.id !== idOut);
-//     persons.persons = filteredArray;
-//     console.log("Persons after delete", persons.persons);
-//     res.status(200).send(idOut.toString());
-// })
     
 
 router.get('*', (req, res) => {

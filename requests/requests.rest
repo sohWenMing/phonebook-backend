@@ -6,6 +6,17 @@ POST http://localhost:3000/persons
 Content-Type:  application/json
 
 {
-    "name": "Arto Hellas"
+    "name": "",
+    "number": "2345"
+}
 
+
+###
+POST http://localhost:3000/test
+Content-Type: application/json 
+
+{
+    "name": "New Person",
+    "number": "1234",
+    "id": null
 }
